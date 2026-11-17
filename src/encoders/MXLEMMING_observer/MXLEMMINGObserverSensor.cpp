@@ -17,9 +17,10 @@ void MXLEMMINGObserverSensor::update() {
   if (!_motor.current_sense) return;
   
   // Exit if one of the parameter needed for the flux observer is 0
-  if ((_motor.phase_inductance == 0) ||
-      (_motor.phase_resistance == 0) ||
-      (flux_linkage == 0)) return;
+  // (parameters not set are NOT_SET, not 0)
+  if (!_isset(_motor.phase_inductance) || (_motor.phase_inductance <= 0) ||
+      !_isset(_motor.phase_resistance) || (_motor.phase_resistance <= 0) ||
+      (flux_linkage <= 0)) return;
 
   // Update sensor, with optional downsampling of update rate
   if (sensor_cnt++ < sensor_downsample) return;
@@ -62,7 +63,7 @@ void MXLEMMINGObserverSensor::update() {
 
   // Electrical angle difference
   float d_electrical_angle = electrical_angle - electrical_angle_prev;
-  if(abs(d_electrical_angle) > _2PI * 0.8 ){ //change the  factor based on sample rate can also just use _PI for simplicity 
+  if(fabsf(d_electrical_angle) > _2PI * 0.8 ){ //change the  factor based on sample rate can also just use _PI for simplicity 
     if (d_electrical_angle > 0){
       d_electrical_angle -= _2PI;
     }else{
@@ -73,7 +74,7 @@ void MXLEMMINGObserverSensor::update() {
 
   // Mechanical angle and full_rotations
   float full_rotation = _2PI * _motor.pole_pairs;
-  if(abs(angle_track) > full_rotation){
+  if(fabsf(angle_track) > full_rotation){
     if (angle_track>0){
       full_rotations += 1;
       angle_track -= full_rotation;
